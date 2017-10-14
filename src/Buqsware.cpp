@@ -51,12 +51,11 @@ void timerset2();
 #include <FiniteStateMachine.h>
 //#include <EEPROM.h>
 #include <Timer.h>
-#include <util/atomic.h>
 
 const int ShiftPWM_latchPin = 8;
 
 //#define SHIFTPWM_USE_TIMER2
-#define SHIFTPWM_NOSPI
+//#define SHIFTPWM_NOSPI
 
 const int ShiftPWM_dataPin = 11;
 const int ShiftPWM_clockPin = 13;
@@ -94,7 +93,7 @@ static const int dataPin = 11;
 SoftwareSPIClass Software_spi;
 
 //instance of radio
-RF22 rf22(10,1,&Software_spi);
+RF22 rf22(10,1);
 
 //global timer
 Timer t;

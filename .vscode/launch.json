@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "gdb",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "name": "PlatformIO Debugger",
+            "target": "/Users/jorishoogeboom/Work/Buqs/buqsware/buqsware/.pioenvs/pro8MHzatmega328/firmware.elf",
+            "gdbpath": "/Users/jorishoogeboom/.platformio/penv/bin/piodebuggdb",
+            "autorun": [ "source .pioinit" ]
+        }
+    ]
+}

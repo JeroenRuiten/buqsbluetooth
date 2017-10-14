@@ -25,6 +25,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "pins_arduino_compile_time.h" // My own version of pins arduino, which does not define the arrays in program memory
 #include <Arduino.h>
 #include "CShiftPWM.h"
+#include "util/atomic.h"
+
+#define ATOMIC_BLOCK_START     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    #define ATOMIC_BLOCK_END }
 
 
 // These should be defined in the file where ShiftPWM.h is included.
@@ -97,7 +101,7 @@ static inline void pwm_output_one_pin(volatile uint8_t * const clockPort, volati
 }
 
 static inline void ShiftPWM_handleInterrupt(void){
-	sei(); //enable interrupt nesting to prevent disturbing other interrupt functions (servo's for example).
+	//sei(); //enable interrupt nesting to prevent disturbing other interrupt functions (servo's for example).
 
 	// Look up which bit of which output register corresponds to the pin.
 	// This should be constant, so the compiler can optimize this code away and use sbi and cbi instructions
@@ -114,20 +118,21 @@ static inline void ShiftPWM_handleInterrupt(void){
 	volatile uint8_t * const clockPort = port_to_output_PGM_ct[digital_pin_to_port_PGM_ct[ShiftPWM_clockPin]];
 	volatile uint8_t * const dataPort  = port_to_output_PGM_ct[digital_pin_to_port_PGM_ct[ShiftPWM_dataPin]];
 	const uint8_t clockBit =  digital_pin_to_bit_PGM_ct[ShiftPWM_clockPin];
-	const uint8_t dataBit =   digital_pin_to_bit_PGM_ct[ShiftPWM_dataPin];   
+	const uint8_t dataBit =   digital_pin_to_bit_PGM_ct[ShiftPWM_dataPin];
 	#endif
 
-	// Define a pointer that will be used to access the values for each output. 
+	// Define a pointer that will be used to access the values for each output.
 	// Let it point one past the last value, because it is decreased before it is used.
 
 	unsigned char * ledPtr=&ShiftPWM.m_PWMValues[ShiftPWM.m_amountOfOutputs];
 
-	// Write shift register latch clock low 
+	// Write shift register latch clock low
 	bitClear(*latchPort, latchBit);
 	unsigned char counter = ShiftPWM.m_counter;
-	
+
 	#ifndef SHIFTPWM_NOSPI
 	//Use SPI to send out all bits
+	ATOMIC_BLOCK_START;
 	SPDR = 0; // write bogus bit to the SPI, because in the loop there is a receive before send.
 	for(unsigned char i = ShiftPWM.m_amountOfRegisters; i>0;--i){   // do a whole shift register at once. This unrolls the loop for extra speed
 		unsigned char sendbyte;  // no need to initialize, all bits are replaced
@@ -145,7 +150,7 @@ static inline void ShiftPWM_handleInterrupt(void){
 		add_one_pin_to_byte(sendbyte, counter,  --ledPtr);
 
 		while (!(SPSR & _BV(SPIF)));    // wait for last send to finish and retreive answer. Retreive must be done, otherwise the SPI will not work.
-		if(ShiftPWM_invertOutputs){	
+		if(ShiftPWM_invertOutputs){
 			sendbyte = ~sendbyte; // Invert the byte if needed.
 		}
 		SPDR = sendbyte; // Send the byte to the SPI
@@ -170,7 +175,7 @@ static inline void ShiftPWM_handleInterrupt(void){
 
 	// Write shift register latch clock high
 	bitSet(*latchPort, latchBit);
-
+	ATOMIC_BLOCK_END;
 	if(ShiftPWM.m_counter<ShiftPWM.m_maxBrightness){
 		ShiftPWM.m_counter++; // Increase the counter
 	}

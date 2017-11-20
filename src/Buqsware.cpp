@@ -1504,6 +1504,12 @@ void setup()
     ShiftPWM.SetAllRGB(255, 255, 255);
     delay(700);
     ShiftPWM.SetAllRGB(0, 0, 0);
+    ShiftPWM.SetAllRGB(0, 255, 0);
+    delay(1000);
+    ShiftPWM.SetAllRGB(255, 0, 0);
+    delay(1000);
+    ShiftPWM.SetAllRGB(0, 0, 255);
+    delay(1000);
     WakeUp();
 }
 

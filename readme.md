@@ -1,3 +1,0 @@
-- install [platformio-IDE](http://platformio.org/platformio-ide)
-- use `run other target` and choose `upload using programmer`
-    - ! normal upload will give errors
